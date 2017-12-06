@@ -1,0 +1,277 @@
+using System;
+using MySql.Data;
+using MySql.Data.MySqlClient;
+using System.Collections.Generic;
+
+namespace ASProjekt2017
+{
+    public class DBConnection
+    {
+        private MySqlConnection connection;
+        private string server;
+        private string database;
+        private string uid;
+        private string password;
+        private string spielername;
+        private string spielername_old;
+        private string vereinId;
+        private string vereinname;
+        private string vereinname_old;
+
+        public DBConnection()
+        {
+            Initialize();
+            InsertVerein();
+        }
+
+        //Initialize values
+        private void Initialize()
+        {
+            server = "d2.servers.smfhq.com";
+            database = "ASProjekt";
+            uid = "Toepfer";
+            password = "p5TW4MWy99VLEBLg8Kb5";
+            string connectionString;
+            connectionString = "SERVER=" + server + ";" + "DATABASE=" +
+            database + ";" + "UID=" + uid + ";" + "PASSWORD=" + password + ";";
+
+            connection = new MySqlConnection(connectionString);
+        }
+        private bool OpenConnection()
+        {
+            try
+            {
+                connection.Open();
+                Console.WriteLine("Verbunden");
+                return true;
+
+            }
+            catch (MySqlException ex)
+            {
+                switch (ex.Number)
+                {
+                    case 0:
+                        Console.WriteLine("Cannot connect to server.  Contact administrator");
+                        break;
+
+                    case 1045:
+                        Console.WriteLine("Invalid username/password, please try again");
+                        break;
+                }
+                return false;
+            }
+        }
+
+        //Close connection
+        private bool CloseConnection()
+        {
+            try
+            {
+                connection.Close();
+                return true;
+            }
+            catch (MySqlException ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
+
+        //Insert statement
+        public void InsertVerein()
+        {
+            
+            string query = "INSERT INTO Vereine (name) VALUES('" + vereinname + "')";
+
+            //open connection
+            if (this.OpenConnection() == true)
+            {
+                //create command and assign the query and connection from the constructor
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+
+                //Execute command
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine("Verein hinzugefügt");
+
+                //close connection
+                this.CloseConnection();
+            }
+        }
+
+        public void InsertSpieler()
+        {
+            string verein = "SELECT ID FROM Vereine WHERE name='" + vereinname + "'";
+            string query = "INSERT INTO Spieler (name, verein_id) VALUES('" + spielername + "', " + verein + ")";
+
+            //open connection
+            if (this.OpenConnection() == true)
+            {
+                //create command and assign the query and connection from the constructor
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+
+                //Execute command
+                cmd.ExecuteNonQuery();
+
+                Console.WriteLine("Spieler hinzugefügt");
+
+                //close connection
+                this.CloseConnection();
+            }
+        }
+
+        //Update statement
+        public void UpdateTeam()
+        {
+            string query = "UPDATE Spieler SET name='" + vereinname + "' WHERE name='" + vereinname_old + "'";
+
+            //Open connection
+            if (this.OpenConnection() == true)
+            {
+                //create mysql command
+                MySqlCommand cmd = new MySqlCommand();
+                //Assign the query using CommandText
+                cmd.CommandText = query;
+                //Assign the connection using Connection
+                cmd.Connection = connection;
+
+                //Execute query
+                cmd.ExecuteNonQuery();
+
+                //close connection
+                this.CloseConnection();
+            }
+        }
+
+        public void UpdatePlayer()
+        {
+            string query = "UPDATE Spieler SET name=" + spielername + ", verein_id=" + vereinId + " WHERE name=" + spielername_old + "";
+
+            //Open connection
+            if (this.OpenConnection() == true)
+            {
+                //create mysql command
+                MySqlCommand cmd = new MySqlCommand();
+                //Assign the query using CommandText
+                cmd.CommandText = query;
+                //Assign the connection using Connection
+                cmd.Connection = connection;
+
+                //Execute query
+                cmd.ExecuteNonQuery();
+
+                //close connection
+                this.CloseConnection();
+            }
+        }
+
+        //Delete statement
+        public void DeleteTeam()
+        {
+            string query = "DELETE FROM Vereine WHERE name=" + vereinname + "";
+
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
+
+        public void DeletePlayer()
+        {
+            string query = "DELETE FROM Spieler WHERE name=" + spielername + "";
+
+            if (this.OpenConnection() == true)
+            {
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                cmd.ExecuteNonQuery();
+                this.CloseConnection();
+            }
+        }
+
+        //Select statement
+        public List<string>[] SelectTeam()
+        {
+            string query = "SELECT * FROM Vereine";
+
+            //Create a list to store the result
+            List<string>[] list = new List<string>[2];
+            list[0] = new List<string>();
+            list[1] = new List<string>();
+
+            //Open connection
+            if (this.OpenConnection() == true)
+            {
+                //Create Command
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                //Create a data reader and Execute the command
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+
+                //Read the data and store them in the list
+                while (dataReader.Read())
+                {
+                    list[0].Add(dataReader["id"] + "");
+                    list[1].Add(dataReader["name"] + "");
+                }
+
+                //close Data Reader
+                dataReader.Close();
+
+                //close Connection
+                this.CloseConnection();
+
+                //return list to be displayed
+                return list;
+
+            }
+            else
+            {
+                return list;
+            }
+        }
+
+        public List<string>[] SelectPlayer()
+        {
+            string query = "SELECT * FROM Spieler";
+
+            //Create a list to store the result
+            List<string>[] list = new List<string>[3];
+            list[0] = new List<string>();
+            list[1] = new List<string>();
+            list[2] = new List<string>();
+
+            //Open connection
+            if (this.OpenConnection() == true)
+            {
+                //Create Command
+                MySqlCommand cmd = new MySqlCommand(query, connection);
+                //Create a data reader and Execute the command
+                MySqlDataReader dataReader = cmd.ExecuteReader();
+
+                //Read the data and store them in the list
+                while (dataReader.Read())
+                {
+                    list[0].Add(dataReader["id"] + "");
+                    list[1].Add(dataReader["name"] + "");
+                    list[2].Add(dataReader["verein_id"] + "");
+                }
+
+                //close Data Reader
+                dataReader.Close();
+
+                //close Connection
+                this.CloseConnection();
+
+                //return list to be displayed
+                return list;
+
+            }
+            else
+            {
+                return list;
+            }
+        }
+
+    }
+}
